@@ -9,5 +9,5 @@ FinTrack is a simple Python application to help you track your personal finances
 
 2. **Install dependencies and run with UV:**
    ```bash
-   uv run fastapi fintrack/app.py
+   uv run task run 
    ```

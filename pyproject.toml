@@ -13,6 +13,7 @@ dev = [
     "pytest>=8.4.0",
     "pytest-cov>=6.2.1",
     "ruff>=0.11.13",
+    "taskipy>=1.14.1",
 ]
 
 [tool.ruff]
@@ -28,3 +29,11 @@ preview = true
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = "-p no:warnings"
+
+[tool.taskipy.tasks]
+pre_format = "ruff check --fix"
+format = "ruff format"
+run = "fastapi dev fintrack/app.py"
+pre_test = "ruff check"
+test = "pytest -s -x --cov=fintrack -vv"
+post_test = "coverage html"
