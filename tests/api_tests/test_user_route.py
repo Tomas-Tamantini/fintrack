@@ -6,6 +6,9 @@ def test_creating_user_with_missing_fields_returns_unprocessable_entity(
 ):
     response = client.post("/users", json={})
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    detail = response.json().get("detail", [])
+    expected_num_missing_fields = 3
+    assert expected_num_missing_fields == len(detail)
 
 
 def test_creating_user_with_invalid_email_returns_status_unprocessable_entity(
@@ -13,6 +16,9 @@ def test_creating_user_with_invalid_email_returns_status_unprocessable_entity(
 ):
     response = client.post("/users", json=invalid_email_create_user_request)
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    detail = response.json().get("detail", [])
+    assert len(detail) == 1
+    assert "not a valid email address" in detail[0]["msg"]
 
 
 def test_creating_user_with_short_username_returns_status_unprocessable_entity(
@@ -20,6 +26,9 @@ def test_creating_user_with_short_username_returns_status_unprocessable_entity(
 ):
     response = client.post("/users", json=short_username_create_user_request)
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    detail = response.json().get("detail", [])
+    assert len(detail) == 1
+    assert "at least 3 characters" in detail[0]["msg"]
 
 
 def test_creating_user_with_long_username_returns_status_unprocessable_entity(
@@ -27,6 +36,9 @@ def test_creating_user_with_long_username_returns_status_unprocessable_entity(
 ):
     response = client.post("/users", json=long_username_create_user_request)
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    detail = response.json().get("detail", [])
+    assert len(detail) == 1
+    assert "at most 50 characters" in detail[0]["msg"]
 
 
 def test_creating_valid_user_returns_status_created(
@@ -74,5 +86,4 @@ def test_creating_user_returns_public_info(
 
 # TODO:
 # Password is hashed before storing
-# Ensure min/max name, email and password lengths are enforced
-# Check for conflict on unique fields (username, email)
+# Check for conflict on unique fields (username, email) on POST and PUT methods
