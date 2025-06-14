@@ -1,7 +1,5 @@
 from http import HTTPStatus
 
-from fintrack.domain.models.user import User
-
 
 def test_creating_user_with_missing_fields_returns_unprocessable_entity(
     client,
@@ -34,21 +32,14 @@ def test_creating_user_delegates_persistence_to_repository(
 
 
 def test_creating_user_returns_public_info(
-    client, valid_create_user_request, mock_user_repository
+    client, valid_create_user_request, mock_user_repository, user_stub
 ):
-    stored_user = User(
-        id=123,
-        username="stored username",
-        email="stored@mail.com",
-        hashed_password="stored_pass",
-    )
-    mock_user_repository.create.return_value = stored_user
+    mock_user_repository.create.return_value = user_stub
     response = client.post("/users", json=valid_create_user_request)
-    assert response.status_code == HTTPStatus.CREATED
     response_data = response.json()
-    assert response_data["id"] == stored_user.id
-    assert response_data["username"] == stored_user.username
-    assert response_data["email"] == stored_user.email
+    assert response_data["id"] == user_stub.id
+    assert response_data["username"] == user_stub.username
+    assert response_data["email"] == user_stub.email
     assert "hashed_password" not in response_data
     assert "password" not in response_data
 

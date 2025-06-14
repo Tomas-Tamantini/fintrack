@@ -7,12 +7,7 @@ from fintrack.domain.repositories.user_repository import UserRepository
 
 
 @pytest.fixture
-def mock_user_repository():
+def mock_user_repository(user_stub: User) -> UserRepository:
     mock_repo = Mock(spec=UserRepository)
-    mock_repo.create.return_value = User(
-        id=1,
-        username="testuser",
-        email="test@user.com",
-        hashed_password="hashedpassword",
-    )
+    mock_repo.create.return_value = user_stub
     return mock_repo
