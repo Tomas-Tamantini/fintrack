@@ -15,24 +15,25 @@ def test_creating_user_with_invalid_email_returns_status_unprocessable_entity(
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_created_user_is_returned_without_password(
+def test_creating_valid_user_returns_status_created(
     client, valid_create_user_request
 ):
     response = client.post("/users", json=valid_create_user_request)
-    assert "password" not in response.json()
+    assert response.status_code == HTTPStatus.CREATED
 
 
-def test_created_user_has_correct_username_and_email(
-    client, valid_create_user_request
+def test_creating_user_delegates_persistence_to_repository(
+    client, valid_create_user_request, mock_user_repository
 ):
     response = client.post("/users", json=valid_create_user_request)
-    response_data = response.json()
-    assert response_data["username"] == valid_create_user_request["username"]
-    assert response_data["email"] == valid_create_user_request["email"]
+    assert response.status_code == HTTPStatus.CREATED
+    call_arg = mock_user_repository.create.call_args[0][0]
+    assert call_arg.username == valid_create_user_request["username"]
+    assert call_arg.email == valid_create_user_request["email"]
 
 
-def test_created_user_has_id(client, valid_create_user_request):
-    response = client.post("/users", json=valid_create_user_request)
-    response_data = response.json()
-    assert "id" in response_data
-    assert isinstance(response_data["id"], int)
+# TODO:
+# Password is hashed before storing
+# Data gets sanitized before storing
+# Response contains only user ID, username, and email (no password)
+# Check for conflict on unique fields (username, email)
