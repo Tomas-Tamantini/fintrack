@@ -1,20 +1,10 @@
 from http import HTTPStatus
 
 from fastapi import FastAPI
-from pydantic import BaseModel, EmailStr
+
+from fintrack.api.dto.user import CreateUserRequest, CreateUserResponse
 
 app = FastAPI()
-
-
-class CreateUserRequest(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-
-
-class CreateUserResponse(BaseModel):
-    username: str
-    email: EmailStr
 
 
 @app.post(
