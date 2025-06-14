@@ -11,7 +11,4 @@ users_router = APIRouter(prefix="/users", tags=["users"])
     "/", status_code=HTTPStatus.CREATED, response_model=CreateUserResponse
 )
 def create_user(user: CreateUserRequest) -> CreateUserResponse:
-    return CreateUserResponse(
-        username=user.username,
-        email=user.email,
-    )
+    return CreateUserResponse(id=1, username=user.username, email=user.email)
