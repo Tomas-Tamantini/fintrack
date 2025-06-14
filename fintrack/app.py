@@ -1,17 +1,8 @@
-from http import HTTPStatus
-
 from fastapi import FastAPI
 
-from fintrack.api.dto.user import CreateUserRequest, CreateUserResponse
+from fintrack.api.routes.user import users_router
 
 app = FastAPI()
 
 
-@app.post(
-    "/users", status_code=HTTPStatus.CREATED, response_model=CreateUserResponse
-)
-async def create_user(user: CreateUserRequest):
-    return CreateUserResponse(
-        username=user.username,
-        email=user.email,
-    )
+app.include_router(users_router)
