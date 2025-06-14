@@ -15,6 +15,20 @@ def test_creating_user_with_invalid_email_returns_status_unprocessable_entity(
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_creating_user_with_short_username_returns_status_unprocessable_entity(
+    client, short_username_create_user_request
+):
+    response = client.post("/users", json=short_username_create_user_request)
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_creating_user_with_long_username_returns_status_unprocessable_entity(
+    client, long_username_create_user_request
+):
+    response = client.post("/users", json=long_username_create_user_request)
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_creating_valid_user_returns_status_created(
     client, valid_create_user_request
 ):
