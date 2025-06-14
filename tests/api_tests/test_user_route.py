@@ -31,6 +31,20 @@ def test_creating_user_delegates_persistence_to_repository(
     assert call_arg.email == valid_create_user_request["email"]
 
 
+def test_creating_user_sanitizes_input_before_storing(
+    client, mock_user_repository
+):
+    dirty_request = {
+        "username": "  User123  ",
+        "email": "  a@b.com ",
+        "password": "123",
+    }
+    client.post("/users", json=dirty_request)
+    call_arg = mock_user_repository.create.call_args[0][0]
+    assert call_arg.username == "User123"
+    assert call_arg.email == "a@b.com"
+
+
 def test_creating_user_returns_public_info(
     client, valid_create_user_request, mock_user_repository, user_stub
 ):
@@ -46,5 +60,5 @@ def test_creating_user_returns_public_info(
 
 # TODO:
 # Password is hashed before storing
-# Data gets sanitized before storing
+# Ensure min/max name, email and password lengths are enforced
 # Check for conflict on unique fields (username, email)
