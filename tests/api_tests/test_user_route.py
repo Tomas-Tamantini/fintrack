@@ -58,17 +58,31 @@ def test_creating_user_delegates_persistence_to_repository(
 
 
 def test_creating_user_sanitizes_input_before_storing(
-    client, mock_user_repository
+    client, mock_user_repository, valid_create_user_request
 ):
-    dirty_request = {
-        "username": "  User123  ",
-        "email": "  a@b.com ",
-        "password": "123",
-    }
+    dirty_request = valid_create_user_request
+    dirty_request["username"] = "  User123  "
+    dirty_request["email"] = "  \ta@b.com "
     client.post("/users", json=dirty_request)
     call_arg = mock_user_repository.create.call_args[0][0]
     assert call_arg.username == "User123"
     assert call_arg.email == "a@b.com"
+
+
+def test_user_password_gets_hashed_before_being_stored(
+    client,
+    mock_user_repository,
+    valid_create_user_request,
+    mock_password_handler,
+):
+    req = valid_create_user_request
+    req["password"] = "plain password"
+    mock_password_handler.hash.return_value = "hashed"
+    client.post("/users", json=req)
+    assert mock_password_handler.hash.call_args[0][0] == "plain password"
+    assert (
+        mock_user_repository.create.call_args[0][0].hashed_password == "hashed"
+    )
 
 
 def test_creating_user_returns_public_info(
@@ -85,5 +99,18 @@ def test_creating_user_returns_public_info(
 
 
 # TODO:
-# Password is hashed before storing
 # Check for conflict on unique fields (username, email) on POST and PUT methods
+# Get by ID returns public info
+# Get by ID returns 404 if user not found
+# Get by ID delegates to repository
+# Delete by ID returns 204 if user deleted
+# Delete by ID returns 404 if user not found
+# Delete by ID delegates to repository
+# Update by ID returns 200 if user updated
+# Update by ID returns 404 if user not found
+# Update by ID delegates to repository
+# Update by ID returns 422 if request is invalid
+# Update by ID checks for conflicts on unique fields (username, email)
+# Get users returns status 200
+# Get users returns list of public user info and total count
+# Get users delegates to repository with pagination/filtering/sorting
