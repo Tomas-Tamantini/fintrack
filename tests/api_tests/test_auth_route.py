@@ -46,23 +46,22 @@ def test_getting_token_with_correct_credentials_delegates_to_jwt_service(
     mock_password_handler,
     mock_jwt_service,
 ):
+    fake_tokens = {
+        "access_token": "fake_access_token",
+        "refresh_token": "fake_refresh_token",
+        "token_type": "Bearer",
+    }
     mock_user_repository.get_by_email.return_value = user_stub
     mock_password_handler.verify.return_value = True
-    mock_jwt_service.create_token_pair.return_value = TokenPair(
-        access_token="fake_access_token",
-        refresh_token="fake_refresh_token",
-        token_type="Bearer",
+    mock_jwt_service.create_token_pair.return_value = TokenPair.model_validate(
+        fake_tokens
     )
     response = client.post(
         "/auth/token",
         data={"username": "mail.exists.com", "password": "correct_password"},
     )
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        "access_token": "fake_access_token",
-        "refresh_token": "fake_refresh_token",
-        "token_type": "Bearer",
-    }
+    assert response.json() == fake_tokens
     mock_jwt_service.create_token_pair.assert_called_once_with(
         user_id=user_stub.email
     )
