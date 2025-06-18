@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 
-from fintrack.api.routes.user import users_router
+from fintrack.api.routes import all_routes
 
 app = FastAPI()
-
-
-app.include_router(users_router)
+for router in all_routes:
+    app.include_router(router)
