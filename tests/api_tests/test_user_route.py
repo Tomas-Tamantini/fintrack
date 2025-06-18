@@ -1,5 +1,7 @@
 from http import HTTPStatus
 
+from fintrack.domain.exceptions import ConflictError
+
 
 def test_creating_user_with_missing_fields_returns_unprocessable_entity(
     client,
@@ -98,8 +100,17 @@ def test_creating_user_returns_public_info(
     assert "password" not in response_data
 
 
+def test_creating_user_with_conflicting_data_returns_status_conflict(
+    client, valid_create_user_request, mock_user_repository
+):
+    mock_user_repository.create.side_effect = ConflictError("user", "email")
+    response = client.post("/users", json=valid_create_user_request)
+    assert response.status_code == HTTPStatus.CONFLICT
+    expected_message = "User with this username or email already exists."
+    assert response.json().get("detail") == expected_message
+
+
 # TODO:
-# Check for conflict on unique fields (username, email) on POST and PUT methods
 # Get by ID returns public info
 # Get by ID returns 404 if user not found
 # Get by ID delegates to repository

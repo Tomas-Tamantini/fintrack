@@ -1,10 +1,11 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from fintrack.api.dependencies.authentication import T_PasswordHandler
 from fintrack.api.dependencies.repositories import T_UserRepository
 from fintrack.api.dto.user import CreateUserRequest, CreateUserResponse
+from fintrack.domain.exceptions import ConflictError
 from fintrack.domain.models.user import UserCore
 
 users_router = APIRouter(prefix="/users", tags=["users"])
@@ -23,7 +24,13 @@ def create_user(
         email=user.email,
         hashed_password=password_handler.hash(user.password),
     )
-    stored = repository.create(parsed)
-    return CreateUserResponse(
-        id=stored.id, username=stored.username, email=stored.email
-    )
+    try:
+        stored = repository.create(parsed)
+        return CreateUserResponse(
+            id=stored.id, username=stored.username, email=stored.email
+        )
+    except ConflictError:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail="User with this username or email already exists.",
+        )
