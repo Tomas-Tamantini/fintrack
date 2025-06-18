@@ -1,5 +1,7 @@
 from http import HTTPStatus
 
+from fintrack.api.authentication.jwt import TokenPair
+
 
 def test_getting_token_with_missing_fields_returns_unprocessable_entity(
     client,
@@ -35,3 +37,32 @@ def test_getting_token_with_wrong_password_returns_unauthorized(
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert response.json().get("detail") == "Incorrect email or password."
+
+
+def test_getting_token_with_correct_credentials_delegates_to_jwt_service(
+    client,
+    mock_user_repository,
+    user_stub,
+    mock_password_handler,
+    mock_jwt_service,
+):
+    mock_user_repository.get_by_email.return_value = user_stub
+    mock_password_handler.verify.return_value = True
+    mock_jwt_service.create_token_pair.return_value = TokenPair(
+        access_token="fake_access_token",
+        refresh_token="fake_refresh_token",
+        token_type="Bearer",
+    )
+    response = client.post(
+        "/auth/token",
+        data={"username": "mail.exists.com", "password": "correct_password"},
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        "access_token": "fake_access_token",
+        "refresh_token": "fake_refresh_token",
+        "token_type": "Bearer",
+    }
+    mock_jwt_service.create_token_pair.assert_called_once_with(
+        user_id=user_stub.email
+    )
