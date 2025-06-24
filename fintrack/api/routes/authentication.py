@@ -1,26 +1,27 @@
 from http import HTTPStatus
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from fintrack.api.authentication.jwt import JWTService, TokenPair
-from fintrack.api.authentication.password_handler import PasswordHandler
+from fintrack.api.authentication.jwt import TokenPair
 from fintrack.api.dependencies.authentication import (
-    get_jwt_service,
-    get_password_handler,
+    T_JWTService,
+    T_PasswordHandler,
 )
-from fintrack.api.dependencies.repositories import get_user_repository
-from fintrack.domain.repositories.user_repository import UserRepository
+from fintrack.api.dependencies.repositories import T_UserRepository
 
 auth_router = APIRouter(prefix="/auth", tags=["authentication"])
+
+T_OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 @auth_router.post("/token", response_model=TokenPair)
 def get_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    user_repository: UserRepository = Depends(get_user_repository),
-    password_handler: PasswordHandler = Depends(get_password_handler),
-    jwt_service: JWTService = Depends(get_jwt_service),
+    form_data: T_OAuth2Form,
+    user_repository: T_UserRepository,
+    password_handler: T_PasswordHandler,
+    jwt_service: T_JWTService,
 ):
     user = user_repository.get_by_email(form_data.username)
     if not user or not password_handler.verify(

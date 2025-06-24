@@ -1,25 +1,23 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from fintrack.api.authentication.password_handler import PasswordHandler
-from fintrack.api.dependencies.authentication import get_password_handler
-from fintrack.api.dependencies.repositories import get_user_repository
+from fintrack.api.dependencies.authentication import T_PasswordHandler
+from fintrack.api.dependencies.repositories import (
+    T_UserRepository,
+)
 from fintrack.api.dto.user import CreateUserRequest, CreateUserResponse
 from fintrack.domain.exceptions import ConflictError
 from fintrack.domain.models.user import UserCore
-from fintrack.domain.repositories.user_repository import UserRepository
 
 users_router = APIRouter(prefix="/users", tags=["users"])
 
 
-@users_router.post(
-    "/", status_code=HTTPStatus.CREATED, response_model=CreateUserResponse
-)
+@users_router.post("/", status_code=HTTPStatus.CREATED)
 def create_user(
     user: CreateUserRequest,
-    repository: UserRepository = Depends(get_user_repository),
-    password_handler: PasswordHandler = Depends(get_password_handler),
+    repository: T_UserRepository,
+    password_handler: T_PasswordHandler,
 ) -> CreateUserResponse:
     parsed = UserCore(
         username=user.username,
