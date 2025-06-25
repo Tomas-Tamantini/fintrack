@@ -5,7 +5,7 @@ from fintrack.domain.models.user import User, UserCore
 
 class InMemoryUserRepository:
     def __init__(self) -> None:
-        self._users = []
+        self._users: list[User] = []
 
     def create(self, user: UserCore) -> User:
         stored = User(
@@ -17,3 +17,8 @@ class InMemoryUserRepository:
         self._users.append(stored)
         print(len(self._users), "users stored in memory")
         return stored
+
+    def gey_by_email(self, email: str) -> User | None:
+        for user in self._users:
+            if user.email == email:
+                return user
