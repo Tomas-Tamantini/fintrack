@@ -18,7 +18,7 @@ class InMemoryUserRepository:
         print(len(self._users), "users stored in memory")
         return stored
 
-    def gey_by_email(self, email: str) -> User | None:
+    def get_by_email(self, email: str) -> User | None:
         for user in self._users:
             if user.email == email:
                 return user
