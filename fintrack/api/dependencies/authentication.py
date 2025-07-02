@@ -17,7 +17,10 @@ T_PasswordHandler = Annotated[PasswordHandler, Depends(get_password_handler)]
 def get_jwt_service() -> JWTService:
     # TODO: Extract key, expirations and algorithm from .env
     return JWTService(
-        key="tempkey", algorithm="HS256", access_token_duration_minutes=15
+        key="tempkey",
+        algorithm="HS256",
+        access_token_duration_minutes=15,
+        refresh_token_duration_minutes=30 * 24 * 60,
     )
 
 

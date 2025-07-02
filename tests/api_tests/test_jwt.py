@@ -8,11 +8,17 @@ from fintrack.api.authentication.jwt_service import JWTService
 KEY = "secretkey"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRATION_MINUTES = 15
+REFRESH_TOKEN_EXPIRATION_MINUTES = 120
 
 
 @pytest.fixture
 def service():
-    return JWTService(KEY, ALGORITHM, ACCESS_TOKEN_EXPIRATION_MINUTES)
+    return JWTService(
+        KEY,
+        ALGORITHM,
+        ACCESS_TOKEN_EXPIRATION_MINUTES,
+        REFRESH_TOKEN_EXPIRATION_MINUTES,
+    )
 
 
 @pytest.fixture
@@ -22,6 +28,29 @@ def decoded_access_token(service):
         return decode(token_pair.access_token, KEY, algorithms=[ALGORITHM])
 
     return _decoded_access_token
+
+
+@pytest.fixture
+def decoded_refresh_token(service):
+    def _decoded_refresh_token(user_id: str = "testuser"):
+        token_pair = service.create_token_pair(user_id)
+        return decode(
+            token_pair.refresh_token,
+            KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_nbf": False},
+        )
+
+    return _decoded_refresh_token
+
+
+def _check_datetime(time: datetime, expected_interval_minutes: int):
+    expected_time = datetime.now(timezone.utc) + timedelta(
+        minutes=expected_interval_minutes
+    )
+    min_range = expected_time - timedelta(seconds=5)
+    max_range = expected_time + timedelta(seconds=5)
+    assert min_range < time < max_range
 
 
 def test_jwt_generates_bearer_tokens(service):
@@ -39,12 +68,26 @@ def test_jwt_generates_access_token_with_given_expiration(
 ):
     access_token = decoded_access_token()
     expiration = datetime.fromtimestamp(access_token["exp"], tz=timezone.utc)
-    expected_expiration = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRATION_MINUTES
+    _check_datetime(expiration, ACCESS_TOKEN_EXPIRATION_MINUTES)
+
+
+def test_jwt_generates_refresh_token_with_given_subject(decoded_refresh_token):
+    refresh_token = decoded_refresh_token("testuser")
+    assert refresh_token["sub"] == "testuser"
+
+
+def test_jwt_generates_refresh_token_with_given_expiration(
+    decoded_refresh_token,
+):
+    refresh_token = decoded_refresh_token()
+    expiration = datetime.fromtimestamp(refresh_token["exp"], tz=timezone.utc)
+    _check_datetime(
+        expiration,
+        REFRESH_TOKEN_EXPIRATION_MINUTES + ACCESS_TOKEN_EXPIRATION_MINUTES,
     )
-    min_range = expected_expiration - timedelta(seconds=5)
-    max_range = expected_expiration + timedelta(seconds=5)
-    assert min_range < expiration < max_range
 
 
-# TODO: Test refresh token sub, nbf and exp
+def test_jwt_generates_refresh_token_with_given_nbf(decoded_refresh_token):
+    refresh_token = decoded_refresh_token()
+    not_before = datetime.fromtimestamp(refresh_token["nbf"], tz=timezone.utc)
+    _check_datetime(not_before, ACCESS_TOKEN_EXPIRATION_MINUTES)
