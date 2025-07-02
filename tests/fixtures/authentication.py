@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from fintrack.api.authentication.jwt import JWTService
+from fintrack.api.authentication.jwt_service import JWTService
 from fintrack.api.authentication.password_handler import PasswordHandler
 
 

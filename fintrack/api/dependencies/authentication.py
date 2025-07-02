@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from pwdlib import PasswordHash
 
-from fintrack.api.authentication.jwt import JWTService
+from fintrack.api.authentication.jwt_service import JWTService
 from fintrack.api.authentication.password_handler import PasswordHandler
 
 
@@ -15,7 +15,8 @@ T_PasswordHandler = Annotated[PasswordHandler, Depends(get_password_handler)]
 
 
 def get_jwt_service() -> JWTService:
-    raise NotImplementedError()
+    # TODO: Extract key and algorithm from .env
+    return JWTService(key="tempkey", algorithm="HS256")
 
 
 T_JWTService = Annotated[JWTService, Depends(get_jwt_service)]

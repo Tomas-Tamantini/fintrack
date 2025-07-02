@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from fintrack.api.authentication.jwt import TokenPair
+from fintrack.api.authentication.jwt_service import TokenPair
 
 
 def test_getting_token_with_missing_fields_returns_unprocessable_entity(

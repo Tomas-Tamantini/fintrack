@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from fintrack.api.authentication.jwt import TokenPair
+from fintrack.api.authentication.jwt_service import TokenPair
 from fintrack.api.dependencies.authentication import (
     T_JWTService,
     T_PasswordHandler,
