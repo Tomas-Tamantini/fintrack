@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 
 from jwt import encode
 from pydantic import BaseModel
@@ -7,7 +8,12 @@ from pydantic import BaseModel
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str = "Bearer"
+    auth_scheme: str = "Bearer"
+
+
+class TokenType(str, Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"
 
 
 class JWTService:
@@ -33,14 +39,19 @@ class JWTService:
         refresh_token_expiration = access_token_expiration + timedelta(
             minutes=self._refresh_token_duration_minutes
         )
-        access_token_data = {"sub": user_id, "exp": access_token_expiration}
+        access_token_data = {
+            "sub": user_id,
+            "exp": access_token_expiration,
+            "token_type": TokenType.ACCESS,
+        }
         refresh_token_data = {
             "sub": user_id,
             "exp": refresh_token_expiration,
             "nbf": access_token_expiration,
+            "token_type": TokenType.REFRESH,
         }
         return TokenPair(
             access_token=self._encode(access_token_data),
             refresh_token=self._encode(refresh_token_data),
-            token_type="Bearer",
+            auth_scheme="Bearer",
         )

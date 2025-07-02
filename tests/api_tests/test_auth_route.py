@@ -49,7 +49,7 @@ def test_getting_token_with_correct_credentials_delegates_to_jwt_service(
     fake_tokens = {
         "access_token": "fake_access_token",
         "refresh_token": "fake_refresh_token",
-        "token_type": "Bearer",
+        "auth_scheme": "Bearer",
     }
     mock_user_repository.get_by_email.return_value = user_stub
     mock_password_handler.verify.return_value = True

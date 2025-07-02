@@ -4,7 +4,7 @@ import pytest
 from freezegun import freeze_time
 from jwt import decode
 
-from fintrack.api.authentication.jwt_service import JWTService
+from fintrack.api.authentication.jwt_service import JWTService, TokenType
 
 KEY = "secretkey"
 ALGORITHM = "HS256"
@@ -47,12 +47,19 @@ def decoded_refresh_token(service):
 
 def test_jwt_generates_bearer_tokens(service):
     token_pair = service.create_token_pair("testuser")
-    assert token_pair.token_type == "Bearer"
+    assert token_pair.auth_scheme == "Bearer"
 
 
 def test_jwt_generates_access_token_with_given_subject(decoded_access_token):
     access_token = decoded_access_token("testuser")
     assert access_token["sub"] == "testuser"
+
+
+def test_jwt_generates_access_token_with_proper_token_type(
+    decoded_access_token,
+):
+    access_token = decoded_access_token()
+    assert access_token["token_type"] == TokenType.ACCESS
 
 
 def test_jwt_generates_access_token_with_given_expiration(
@@ -69,6 +76,13 @@ def test_jwt_generates_access_token_with_given_expiration(
 def test_jwt_generates_refresh_token_with_given_subject(decoded_refresh_token):
     refresh_token = decoded_refresh_token("testuser")
     assert refresh_token["sub"] == "testuser"
+
+
+def test_jwt_generates_refresh_token_with_proper_token_type(
+    decoded_refresh_token,
+):
+    refresh_token = decoded_refresh_token()
+    assert refresh_token["token_type"] == TokenType.REFRESH
 
 
 def test_jwt_generates_refresh_token_with_given_expiration(
