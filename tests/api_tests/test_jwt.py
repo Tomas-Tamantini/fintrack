@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
+from freezegun import freeze_time
 from jwt import decode
 
 from fintrack.api.authentication.jwt_service import JWTService
@@ -44,15 +45,6 @@ def decoded_refresh_token(service):
     return _decoded_refresh_token
 
 
-def _check_datetime(time: datetime, expected_interval_minutes: int):
-    expected_time = datetime.now(timezone.utc) + timedelta(
-        minutes=expected_interval_minutes
-    )
-    min_range = expected_time - timedelta(seconds=5)
-    max_range = expected_time + timedelta(seconds=5)
-    assert min_range < time < max_range
-
-
 def test_jwt_generates_bearer_tokens(service):
     token_pair = service.create_token_pair("testuser")
     assert token_pair.token_type == "Bearer"
@@ -66,9 +58,12 @@ def test_jwt_generates_access_token_with_given_subject(decoded_access_token):
 def test_jwt_generates_access_token_with_given_expiration(
     decoded_access_token,
 ):
-    access_token = decoded_access_token()
-    expiration = datetime.fromtimestamp(access_token["exp"], tz=timezone.utc)
-    _check_datetime(expiration, ACCESS_TOKEN_EXPIRATION_MINUTES)
+    with freeze_time("2023-01-01 12:00:00"):
+        access_token = decoded_access_token()
+        expiration = datetime.fromtimestamp(
+            access_token["exp"], tz=timezone.utc
+        )
+        assert expiration == datetime(2023, 1, 1, 12, 15, tzinfo=timezone.utc)
 
 
 def test_jwt_generates_refresh_token_with_given_subject(decoded_refresh_token):
@@ -79,15 +74,18 @@ def test_jwt_generates_refresh_token_with_given_subject(decoded_refresh_token):
 def test_jwt_generates_refresh_token_with_given_expiration(
     decoded_refresh_token,
 ):
-    refresh_token = decoded_refresh_token()
-    expiration = datetime.fromtimestamp(refresh_token["exp"], tz=timezone.utc)
-    _check_datetime(
-        expiration,
-        REFRESH_TOKEN_EXPIRATION_MINUTES + ACCESS_TOKEN_EXPIRATION_MINUTES,
-    )
+    with freeze_time("2023-01-01 12:00:00"):
+        refresh_token = decoded_refresh_token()
+        expiration = datetime.fromtimestamp(
+            refresh_token["exp"], tz=timezone.utc
+        )
+        assert expiration == datetime(2023, 1, 1, 14, 15, tzinfo=timezone.utc)
 
 
 def test_jwt_generates_refresh_token_with_given_nbf(decoded_refresh_token):
-    refresh_token = decoded_refresh_token()
-    not_before = datetime.fromtimestamp(refresh_token["nbf"], tz=timezone.utc)
-    _check_datetime(not_before, ACCESS_TOKEN_EXPIRATION_MINUTES)
+    with freeze_time("2023-01-01 12:00:00"):
+        refresh_token = decoded_refresh_token()
+        not_before = datetime.fromtimestamp(
+            refresh_token["nbf"], tz=timezone.utc
+        )
+        assert not_before == datetime(2023, 1, 1, 12, 15, tzinfo=timezone.utc)
